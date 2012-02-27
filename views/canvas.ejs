@@ -1,0 +1,177 @@
+<div id="spin-container">
+  <p><a href="/">Go to top page</a></p>
+  <h1><%= post.title %></h1>
+
+  <!-- Canvas -->
+  <div>
+    <canvas id="canvas1" width="720" height="480"></canvas>
+  </div>
+
+  <div id="controls">
+    <div id="style-control">
+      <h3>Style</h3>
+      <input type="radio" name="style" value="Freehand" checked> Freehand
+    </div>
+    <div id="color-control">
+      <h3>Color</h3>
+      <input type="radio" name="color" value="rgb(255, 0, 0)" checked> Red
+      <input type="radio" name="color" value="rgb(0, 255, 0)"> Green
+      <input type="radio" name="color" value="rgb(0, 0, 255)"> Blue
+      <input type="radio" name="color" value="rgb(255, 255, 0)"> Yellow
+      <input type="radio" name="color" value="rgb(255, 0, 255)"> Pink
+      <input type="radio" name="color" value="rgb(0, 255, 255)"> Aqua
+    </div>
+    <div>
+      <h3>Clear</h3>
+      <input type="button" class="btn" value="Clear" id="clear">
+    </div>
+  </div>
+</div>
+
+<!-- Script -->
+<script src="http://fgnass.github.com/spin.js/spin.min.js"></script>
+<script src=/socket.io/socket.io.js""></script>
+<script type="text/javascript">
+
+  var isSending = false;
+  var socket = undefined;
+
+  var myPrevPosition = {};
+  var prevPositions = {};
+
+  $(document).ready(function () {
+
+    // 準備中
+/*
+    var opts = {
+      lines: 12, // The number of lines to draw
+      length: 7, // The length of each line
+      width: 4, // The line thickness
+      radius: 10, // The radius of the inner circle
+      color: '#000', // #rgb or #rrggbb
+      speed: 1, // Rounds per second
+      trail: 60, // Afterglow percentage
+      shadow: false, // Whether to render a shadow
+      hwaccel: false // Whether to use hardware acceleration
+    };
+    var target = document.getElementById('spin-container');
+    var spinner = new Spinner(opts).spin(target);
+*/
+
+    // 初期化
+    socket = io.connect('http://localhost');
+    // Socket.IO 受信時
+    socket.on('pos', function (data) {
+      drawLine(prevPositions[data.sid].x, prevPositions[data.sid].y, data.x, data.y, data.color);
+      prevPositions[data.sid] = {
+        x: data.x,
+        y: data.y
+      };
+    });
+    socket.on('clear', function (data) {
+      clearCanvas();
+    });
+    socket.on('start', function (data) {
+      console.log('receive start');
+      prevPositions[data.sid] = {
+        x: data.x,
+        y: data.y
+      };
+    });
+    socket.on('end', function (data) {
+      console.log('receive end');
+      prevPositions[data.sid] = {};
+    });
+
+    // clearボタンにイベント登録
+    $("#clear").click(function () {
+      socket.emit('clear', {});
+    });
+    
+    // マウスイベントの追加
+    var canvas = $("#canvas1");
+    canvas.mousedown(startSendPosition);
+    canvas.mouseup(endSendPosition);
+    canvas.mousemove(sendPosition);
+
+    // 入室
+    socket.emit('room', {
+      room: "<%= post.id %>"
+    });
+  });
+
+  // 直前の位置から直線を引く
+  function drawLine (x1, y1, x2, y2, color) {
+    var canvas = $("#canvas1");
+    if (canvas[0].getContext) {
+      var context = canvas[0].getContext('2d');
+      context.strokeStyle = color;
+      context.beginPath();
+      context.moveTo(x1, y1);
+      context.lineTo(x2, y2);
+      context.closePath();
+      context.stroke();
+    }
+  }
+
+  function clearCanvas() {
+    var canvas = $("#canvas1");
+    if (canvas[0].getContext) {
+      var context = canvas[0].getContext('2d');
+      context.clearRect(0, 0, 720, 480);
+    }
+  }
+
+  //
+  function startSendPosition (event) {
+    isSending = true;
+    if (socket) {
+      var param = {
+        x: event.pageX - $("#canvas1").position().left,
+        y: event.pageY - $("#canvas1").position().top,
+        color: $("input[name=color]:checked").val()
+      };
+      myPrevPosition = {
+        x: event.pageX - $("#canvas1").position().left,
+        y: event.pageY - $("#canvas1").position().top,
+      };
+      socket.emit('start', param);
+    }
+  }
+  function endSendPosition (event) {
+    isSending = false;
+    if (socket) {
+      var currentX = event.pageX - $("#canvas1").position().left;
+      var currentY = event.pageY - $("#canvas1").position().top;
+      var param = {
+        x: currentX,
+        y: currentY,
+        color: $("input[name=color]:checked").val()
+      };
+      socket.emit('end', param);
+    }
+  }
+  function sendPosition (event) {
+    if (socket && isSending) {
+      var currentX = event.pageX - $("#canvas1").position().left;
+      var currentY = event.pageY - $("#canvas1").position().top;
+      if (distance(currentX, currentY, myPrevPosition.x, myPrevPosition.y) > 5.0) {
+        var param = {
+          x: event.pageX - $("#canvas1").position().left,
+          y: event.pageY - $("#canvas1").position().top,
+          color: $("input[name=color]:checked").val()
+        };
+        myPrevPosition = {
+          x: event.pageX - $("#canvas1").position().left,
+          y: event.pageY - $("#canvas1").position().top,
+        };       
+        socket.emit('pos', param);
+      }
+    }
+  }
+  function distance(x1, y1, x2, y2) {
+    var dx = x1 - x2;
+    var dy = y1 - y2;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+</script>

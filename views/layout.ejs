@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <!-- jquery -->
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("jquery", "1");
+    </script>
+    <link rel='stylesheet' href="/stylesheets/bootstrap.min.css" />
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <!-- navbar -->
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#"><%= title %></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- contents -->
+    <div class="container">
+<%- body %>
+    </div>
+  </body>
+</html>

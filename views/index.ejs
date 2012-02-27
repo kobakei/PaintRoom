@@ -1,0 +1,39 @@
+<div class="hero-unit">
+  <h1><%= title %></h1>
+  <p class="lead">A sample of Node.js/Socket.IO/MongoDB/HTML5 Canvas</p>
+</div>
+
+<section>
+  <div class="page-header">
+    <h1>List of painting rooms</h1>
+  </div>
+  <div>
+    <ul id="rooms">
+      <% for (var i=0; i<posts.length; i++) { %>
+      <li>
+      <a href="/canvas/<%= posts[i].id %>"><%= posts[i].title %></a> (id = <%= posts[i].id %>)
+      </li>
+      <% } %>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="page-header">
+    <h1>Create new room</h1>
+  </div>
+  <form action="/canvas/create" method="POST" class="form-horizontal">
+    <fieldset>
+      <div class="control-group">
+        <label class="control-label" for="input-title">Room title</label>
+        <div class="controls">
+          <input type="text" name="title">
+        </div>
+      </div>
+      <div class="form-actions">
+        <input type="submit" class="btn btn-primary" value="Create new room">
+      </div>
+    </fieldset>
+  </form>
+</section>
+

@@ -1,0 +1,14 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+ul#rooms {
+  font-size: larger;
+}
+#canvas1 {
+  border: solid 1px black;
+}
+#controls {
+  padding: 20px;
+}
